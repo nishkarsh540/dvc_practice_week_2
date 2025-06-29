@@ -22,7 +22,6 @@ jobs:
 
     - name: Install dependencies
       run: |
-        pip install -r requirements.txt
         pip install pytest flake8 black cml joblib scikit-learn pandas matplotlib
 
     - name: Format code
