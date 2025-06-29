@@ -1,0 +1,56 @@
+name: CI Iris Pipeline
+
+on:
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.9'
+
+    - name: Install dependencies
+      run: |
+        pip install -r requirements.txt
+        pip install pytest flake8 black cml joblib scikit-learn pandas matplotlib
+
+    - name: Format code
+      run: black src/ tests/
+
+    - name: Lint code
+      run: flake8 src/ tests/
+
+    - name: Run Training
+      run: python src/train.py
+
+    - name: Run Tests
+      run: pytest tests/
+
+    - name: Plot Metrics
+      run: python src/plot_metrics.py
+
+    - name: Upload Artifacts
+      uses: actions/upload-artifact@v3
+      with:
+        name: iris-artifacts
+        path: |
+          model.joblib
+          metrics.png
+          report.md
+
+    - name: Post Report as PR Comment
+      env:
+        REPO_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      run: |
+        cml comment create report.md
